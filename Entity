@@ -1,0 +1,122 @@
+// Directory: entity/Patient.java package entity;
+
+public class Patient { private int patientId; private String firstName; private String lastName; private String dateOfBirth; private String gender; private String contactNumber; private String address;
+
+public Patient() {}
+
+public Patient(int patientId, String firstName, String lastName, String dateOfBirth, String gender, String contactNumber, String address) {
+    this.patientId = patientId;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.dateOfBirth = dateOfBirth;
+    this.gender = gender;
+    this.contactNumber = contactNumber;
+    this.address = address;
+}
+
+public int getPatientId() { return patientId; }
+public void setPatientId(int patientId) { this.patientId = patientId; }
+
+public String getFirstName() { return firstName; }
+public void setFirstName(String firstName) { this.firstName = firstName; }
+
+public String getLastName() { return lastName; }
+public void setLastName(String lastName) { this.lastName = lastName; }
+
+public String getDateOfBirth() { return dateOfBirth; }
+public void setDateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+
+public String getGender() { return gender; }
+public void setGender(String gender) { this.gender = gender; }
+
+public String getContactNumber() { return contactNumber; }
+public void setContactNumber(String contactNumber) { this.contactNumber = contactNumber; }
+
+public String getAddress() { return address; }
+public void setAddress(String address) { this.address = address; }
+
+@Override
+public String toString() {
+    return "Patient [patientId=" + patientId + ", firstName=" + firstName + ", lastName=" + lastName +
+            ", dateOfBirth=" + dateOfBirth + ", gender=" + gender + ", contactNumber=" + contactNumber +
+            ", address=" + address + "]";
+}
+
+}
+
+// Directory: entity/Doctor.java package entity;
+
+public class Doctor { private int doctorId; private String firstName; private String lastName; private String specialization; private String contactNumber;
+
+public Doctor() {}
+
+public Doctor(int doctorId, String firstName, String lastName, String specialization, String contactNumber) {
+    this.doctorId = doctorId;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.specialization = specialization;
+    this.contactNumber = contactNumber;
+}
+
+public int getDoctorId() { return doctorId; }
+public void setDoctorId(int doctorId) { this.doctorId = doctorId; }
+
+public String getFirstName() { return firstName; }
+public void setFirstName(String firstName) { this.firstName = firstName; }
+
+public String getLastName() { return lastName; }
+public void setLastName(String lastName) { this.lastName = lastName; }
+
+public String getSpecialization() { return specialization; }
+public void setSpecialization(String specialization) { this.specialization = specialization; }
+
+public String getContactNumber() { return contactNumber; }
+public void setContactNumber(String contactNumber) { this.contactNumber = contactNumber; }
+
+@Override
+public String toString() {
+    return "Doctor [doctorId=" + doctorId + ", firstName=" + firstName + ", lastName=" + lastName +
+            ", specialization=" + specialization + ", contactNumber=" + contactNumber + "]";
+}
+
+}
+
+// Directory: entity/Appointment.java package entity;
+
+public class Appointment { private int appointmentId; private int patientId; private int doctorId; private String appointmentDate; private String description;
+
+public Appointment() {}
+
+public Appointment(int appointmentId, int patientId, int doctorId, String appointmentDate, String description) {
+    this.appointmentId = appointmentId;
+    this.patientId = patientId;
+    this.doctorId = doctorId;
+    this.appointmentDate = appointmentDate;
+    this.description = description;
+}
+
+public int getAppointmentId() { return appointmentId; }
+public void setAppointmentId(int appointmentId) { this.appointmentId = appointmentId; }
+
+public int getPatientId() { return patientId; }
+public void setPatientId(int patientId) { this.patientId = patientId; }
+
+public int getDoctorId() { return doctorId; }
+public void setDoctorId(int doctorId) { this.doctorId = doctorId; }
+
+public String getAppointmentDate() { return appointmentDate; }
+public void setAppointmentDate(String appointmentDate) { this.appointmentDate = appointmentDate; }
+
+public String getDescription() { return description; }
+public void setDescription(String description) { this.description = description; }
+
+@Override
+public String toString() {
+    return "Appointment [appointmentId=" + appointmentId + ", patientId=" + patientId + ", doctorId=" + doctorId +
+            ", appointmentDate=" + appointmentDate + ", description=" + description + "]";
+}
+
+}
+
+// Let me know if you want the code for DAO interfaces, implementation, exception classes, utility classes, and the main module next.
+
