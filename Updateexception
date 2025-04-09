@@ -37,3 +37,20 @@ try {
 } catch (PatientNumberNotFoundException e) {
     System.out.println("Error: " + e.getMessage());
 }
+
+
+case 2:
+    System.out.print("Enter patient ID: ");
+    int patientId = sc.nextInt();
+    try {
+        List<Appointment> plist = service.getAppointmentsForPatient(patientId);
+
+        if (plist.isEmpty()) {
+            throw new PatientNumberNotFoundException("No appointments found for patient ID: " + patientId);
+        }
+
+        plist.forEach(System.out::println);
+    } catch (PatientNumberNotFoundException e) {
+        System.out.println("Error: " + e.getMessage());
+    }
+    break;
