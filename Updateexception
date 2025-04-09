@@ -1,0 +1,39 @@
+@Override
+public boolean updateAppointment(Appointment appointment) throws PatientNumberNotFoundException {
+    String sql = "UPDATE appointment SET patientid = ?, doctorid = ?, appointmentDate = ?, description = ? WHERE appointmentid = ?";
+    try (Connection conn = DBConnUtil.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setInt(1, appointment.getPatientId());
+        stmt.setInt(2, appointment.getDoctorId());
+        stmt.setString(3, appointment.getAppointmentDate());
+        stmt.setString(4, appointment.getDescription());
+        stmt.setInt(5, appointment.getAppointmentId());
+
+        int rowsAffected = stmt.executeUpdate();
+
+        if (rowsAffected == 0) {
+            throw new PatientNumberNotFoundException("No appointment found with ID: " + appointment.getAppointmentId());
+        }
+
+        return true;
+
+    } catch (PatientNumberNotFoundException e) {
+        throw e; // rethrow to handle it in the main module
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    return false;
+}
+
+
+
+try {
+    boolean isUpdated = hospitalService.updateAppointment(appointment);
+    if (isUpdated) {
+        System.out.println("Appointment updated successfully.");
+    }
+} catch (PatientNumberNotFoundException e) {
+    System.out.println("Error: " + e.getMessage());
+}
