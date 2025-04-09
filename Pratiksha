@@ -1,0 +1,435 @@
+// File: src/entity/Pet.java
+package entity;
+
+public class Pet {
+    private String name;
+    private int age;
+    private String breed;
+
+    public Pet(String name, int age, String breed) {
+        this.name = name;
+        this.age = age;
+        this.breed = breed;
+    }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+    public String getBreed() { return breed; }
+    public void setBreed(String breed) { this.breed = breed; }
+
+    @Override
+    public String toString() {
+        return "Pet{name='" + name + "', age=" + age + ", breed='" + breed + "'}";
+    }
+}
+
+// File: src/entity/Dog.java
+package entity;
+
+public class Dog extends Pet {
+    private String dogBreed;
+
+    public Dog(String name, int age, String breed, String dogBreed) {
+        super(name, age, breed);
+        this.dogBreed = dogBreed;
+    }
+
+    public String getDogBreed() { return dogBreed; }
+    public void setDogBreed(String dogBreed) { this.dogBreed = dogBreed; }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", dogBreed='" + dogBreed + "'";
+    }
+}
+
+// File: src/entity/Cat.java
+package entity;
+
+public class Cat extends Pet {
+    private String catColor;
+
+    public Cat(String name, int age, String breed, String catColor) {
+        super(name, age, breed);
+        this.catColor = catColor;
+    }
+
+    public String getCatColor() { return catColor; }
+    public void setCatColor(String catColor) { this.catColor = catColor; }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", catColor='" + catColor + "'";
+    }
+}
+
+// File: src/entity/PetShelter.java
+package entity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class PetShelter {
+    private List<Pet> availablePets = new ArrayList<>();
+
+    public void addPet(Pet pet) {
+        availablePets.add(pet);
+    }
+
+    public void removePet(Pet pet) {
+        availablePets.remove(pet);
+    }
+
+    public void listAvailablePets() {
+        if (availablePets.isEmpty()) {
+            System.out.println("No pets available.");
+        } else {
+            for (Pet pet : availablePets) {
+                System.out.println(pet);
+            }
+        }
+    }
+
+    public List<Pet> getAvailablePets() {
+        return availablePets;
+    }
+}
+
+// File: src/entity/Donation.java
+package entity;
+
+public abstract class Donation {
+    protected String donorName;
+    protected double amount;
+
+    public Donation(String donorName, double amount) {
+        this.donorName = donorName;
+        this.amount = amount;
+    }
+
+    public abstract void recordDonation();
+}
+
+// File: src/entity/CashDonation.java
+package entity;
+
+import java.time.LocalDateTime;
+
+public class CashDonation extends Donation {
+    private LocalDateTime donationDate;
+
+    public CashDonation(String donorName, double amount, LocalDateTime donationDate) {
+        super(donorName, amount);
+        this.donationDate = donationDate;
+    }
+
+    @Override
+    public void recordDonation() {
+        System.out.println("Cash donation recorded: " + donorName + ", $" + amount + ", " + donationDate);
+    }
+}
+
+// File: src/entity/ItemDonation.java
+package entity;
+
+public class ItemDonation extends Donation {
+    private String itemType;
+
+    public ItemDonation(String donorName, double amount, String itemType) {
+        super(donorName, amount);
+        this.itemType = itemType;
+    }
+
+    @Override
+    public void recordDonation() {
+        System.out.println("Item donation recorded: " + donorName + ", " + itemType + ", value $" + amount);
+    }
+}
+
+// File: src/entity/AdoptionEvent.java
+package entity;
+
+import dao.IAdoptable;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class AdoptionEvent {
+    private List<IAdoptable> participants = new ArrayList<>();
+
+    public void hostEvent() {
+        System.out.println("Hosting adoption event with " + participants.size() + " participants.");
+        for (IAdoptable participant : participants) {
+            participant.adopt();
+        }
+    }
+
+    public void registerParticipant(IAdoptable participant) {
+        participants.add(participant);
+    }
+}
+
+// File: src/dao/IAdoptable.java
+package dao;
+
+public interface IAdoptable {
+    void adopt();
+}
+
+// File: src/dao/PetDAO.java
+package dao;
+
+import entity.Pet;
+import exception.DatabaseException;
+import util.DBConnUtil;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PetDAO {
+    public List<Pet> getAvailablePets() throws DatabaseException {
+        List<Pet> pets = new ArrayList<>();
+        String sql = "SELECT * FROM pets";
+        try (Connection conn = DBConnUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                String type = rs.getString("type");
+                Pet pet;
+                if ("Dog".equals(type)) {
+                    pet = new entity.Dog(rs.getString("name"), rs.getInt("age"), 
+                        rs.getString("breed"), rs.getString("dog_breed"));
+                } else {
+                    pet = new entity.Cat(rs.getString("name"), rs.getInt("age"), 
+                        rs.getString("breed"), rs.getString("cat_color"));
+                }
+                pets.add(pet);
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("Error fetching pets: " + e.getMessage());
+        }
+        return pets;
+    }
+
+    public void addPet(Pet pet) throws DatabaseException {
+        String sql = "INSERT INTO pets (name, age, breed, type, dog_breed, cat_color) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DBConnUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, pet.getName());
+            pstmt.setInt(2, pet.getAge());
+            pstmt.setString(3, pet.getBreed());
+            if (pet instanceof entity.Dog) {
+                pstmt.setString(4, "Dog");
+                pstmt.setString(5, ((entity.Dog) pet).getDogBreed());
+                pstmt.setNull(6, Types.VARCHAR);
+            } else {
+                pstmt.setString(4, "Cat");
+                pstmt.setNull(5, Types.VARCHAR);
+                pstmt.setString(6, ((entity.Cat) pet).getCatColor());
+            }
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DatabaseException("Error adding pet: " + e.getMessage());
+        }
+    }
+}
+
+// File: src/dao/DonationDAO.java
+package dao;
+
+import entity.CashDonation;
+import entity.ItemDonation;
+import entity.Donation;
+import exception.DatabaseException;
+import util.DBConnUtil;
+
+import java.sql.*;
+
+public class DonationDAO {
+    public void recordDonation(Donation donation) throws DatabaseException {
+        String sql = "INSERT INTO donations (donor_name, amount, donation_type, donation_date, item_type) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DBConnUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, donation.donorName);
+            pstmt.setDouble(2, donation.amount);
+            if (donation instanceof CashDonation) {
+                CashDonation cash = (CashDonation) donation;
+                pstmt.setString(3, "Cash");
+                pstmt.setTimestamp(4, Timestamp.valueOf(cash.donationDate));
+                pstmt.setNull(5, Types.VARCHAR);
+            } else {
+                ItemDonation item = (ItemDonation) donation;
+                pstmt.setString(3, "Item");
+                pstmt.setNull(4, Types.TIMESTAMP);
+                pstmt.setString(5, item.itemType);
+            }
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DatabaseException("Error recording donation: " + e.getMessage());
+        }
+    }
+}
+
+// File: src/dao/AdoptionEventDAO.java
+package dao;
+
+import entity.AdoptionEvent;
+import exception.DatabaseException;
+import util.DBConnUtil;
+
+import java.sql.*;
+import java.time.LocalDateTime;
+
+public class AdoptionEventDAO {
+    public void createEvent(LocalDateTime eventDate) throws DatabaseException {
+        String sql = "INSERT INTO adoption_events (event_date) VALUES (?)";
+        try (Connection conn = DBConnUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setTimestamp(1, Timestamp.valueOf(eventDate));
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DatabaseException("Error creating event: " + e.getMessage());
+        }
+    }
+
+    public void registerParticipant(int eventId, String participantType) throws DatabaseException {
+        String sql = "INSERT INTO participants (event_id, participant_type) VALUES (?, ?)";
+        try (Connection conn = DBConnUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, eventId);
+            pstmt.setString(2, participantType);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DatabaseException("Error registering participant: " + e.getMessage());
+        }
+    }
+}
+
+// File: src/exception/InvalidPetAgeException.java
+package exception;
+
+public class InvalidPetAgeException extends Exception {
+    public InvalidPetAgeException(String message) {
+        super(message);
+    }
+}
+
+// File: src/exception/InsufficientFundsException.java
+package exception;
+
+public class InsufficientFundsException extends Exception {
+    public InsufficientFundsException(String message) {
+        super(message);
+    }
+}
+
+// File: src/exception/AdoptionException.java
+package exception;
+
+public class AdoptionException extends Exception {
+    public AdoptionException(String message) {
+        super(message);
+    }
+}
+
+// File: src/exception/DatabaseException.java
+package exception;
+
+public class DatabaseException extends Exception {
+    public DatabaseException(String message) {
+        super(message);
+    }
+}
+
+// File: src/util/DBPropertyUtil.java
+package util;
+
+import java.io.IOException;
+import java.util.Properties;
+
+public class DBPropertyUtil {
+    public static String getConnectionString(String propertyFileName) {
+        Properties props = new Properties();
+        try (var inputStream = DBPropertyUtil.class.getClassLoader().getResourceAsStream(propertyFileName)) {
+            if (inputStream == null) {
+                throw new IOException("Unable to find " + propertyFileName);
+            }
+            props.load(inputStream);
+            return props.getProperty("db.url") + "?user=" + props.getProperty("db.username") + 
+                   "&password=" + props.getProperty("db.password");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+}
+
+// File: src/util/DBConnUtil.java
+package util;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DBConnUtil {
+    public static Connection getConnection() throws SQLException {
+        String connString = DBPropertyUtil.getConnectionString("/db.properties");
+        if (connString == null) {
+            throw new SQLException("Database connection string is null");
+        }
+        return DriverManager.getConnection(connString);
+    }
+}
+
+// File: src/MainModule.java
+package main;
+
+import dao.*;
+import entity.*;
+import exception.*;
+import java.time.LocalDateTime;
+import java.util.Scanner;
+
+public class MainModule implements IAdoptable {
+    private static PetShelter shelter = new PetShelter();
+    private static PetDAO petDAO = new PetDAO();
+    private static DonationDAO donationDAO = new DonationDAO();
+    private static AdoptionEventDAO eventDAO = new AdoptionEventDAO();
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        while (true) {
+            System.out.println("\nPetPals Menu:");
+            System.out.println("1. Add Pet");
+            System.out.println("2. List Pets");
+            System.out.println("3. Record Donation");
+            System.out.println("4. Host Adoption Event");
+            System.out.println("5. Exit");
+            System.out.print("Choose an option: ");
+            
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // consume newline
+
+            try {
+                switch (choice) {
+                    case 1 -> addPet();
+                    case 2 -> listPets();
+                    case 3 -> recordDonation();
+                    case 4 -> hostAdoptionEvent();
+                    case 5 -> {
+                        System.out.println("Exiting...");
+                        return;
+                    }
+                    default -> System.out.println("Invalid option.");
+                }
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+        }
+    }
+
+    private static void addPet() throws InvalidPetAgeException, DatabaseException {
+        System.out.print("Enter pet type (Dog/Cat):
