@@ -1,0 +1,187 @@
+// Directory: entity/Patient.java (package entity...) // (Entity classes here, same as before)
+
+// Directory: dao/IHospitalService.java package dao;
+
+import entity.Appointment; import java.util.List;
+
+public interface IHospitalService { Appointment getAppointmentById(int appointmentId); List<Appointment> getAppointmentsForPatient(int patientId); List<Appointment> getAppointmentsForDoctor(int doctorId); boolean scheduleAppointment(Appointment appointment); boolean updateAppointment(Appointment appointment); boolean cancelAppointment(int appointmentId); }
+
+// Directory: dao/HospitalServiceImpl.java package dao;
+
+import entity.Appointment; import myexceptions.PatientNumberNotFoundException; import util.DBConnUtil;
+
+import java.sql.*; import java.util.ArrayList; import java.util.List;
+
+public class HospitalServiceImpl implements IHospitalService {
+
+private Connection conn;
+
+public HospitalServiceImpl() {
+    this.conn = DBConnUtil.getConnection();
+}
+
+@Override
+public Appointment getAppointmentById(int appointmentId) {
+    Appointment appt = null;
+    try {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM appointment WHERE appointmentId = ?");
+        stmt.setInt(1, appointmentId);
+        ResultSet rs = stmt.executeQuery();
+        if (rs.next()) {
+            appt = new Appointment(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5));
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return appt;
+}
+
+@Override
+public List<Appointment> getAppointmentsForPatient(int patientId) {
+    List<Appointment> list = new ArrayList<>();
+    try {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM appointment WHERE patientId = ?");
+        stmt.setInt(1, patientId);
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            list.add(new Appointment(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5)));
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return list;
+}
+
+@Override
+public List<Appointment> getAppointmentsForDoctor(int doctorId) {
+    List<Appointment> list = new ArrayList<>();
+    try {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM appointment WHERE doctorId = ?");
+        stmt.setInt(1, doctorId);
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            list.add(new Appointment(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getString(4), rs.getString(5)));
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return list;
+}
+
+@Override
+public boolean scheduleAppointment(Appointment appointment) {
+    try {
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO appointment VALUES (?, ?, ?, ?, ?)");
+        stmt.setInt(1, appointment.getAppointmentId());
+        stmt.setInt(2, appointment.getPatientId());
+        stmt.setInt(3, appointment.getDoctorId());
+        stmt.setString(4, appointment.getAppointmentDate());
+        stmt.setString(5, appointment.getDescription());
+        return stmt.executeUpdate() > 0;
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return false;
+}
+
+@Override
+public boolean updateAppointment(Appointment appointment) {
+    try {
+        PreparedStatement stmt = conn.prepareStatement("UPDATE appointment SET patientId=?, doctorId=?, appointmentDate=?, description=? WHERE appointmentId=?");
+        stmt.setInt(1, appointment.getPatientId());
+        stmt.setInt(2, appointment.getDoctorId());
+        stmt.setString(3, appointment.getAppointmentDate());
+        stmt.setString(4, appointment.getDescription());
+        stmt.setInt(5, appointment.getAppointmentId());
+        return stmt.executeUpdate() > 0;
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return false;
+}
+
+@Override
+public boolean cancelAppointment(int appointmentId) {
+    try {
+        PreparedStatement stmt = conn.prepareStatement("DELETE FROM appointment WHERE appointmentId = ?");
+        stmt.setInt(1, appointmentId);
+        return stmt.executeUpdate() > 0;
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return false;
+}
+
+}
+
+// Directory: myexceptions/PatientNumberNotFoundException.java package myexceptions;
+
+public class PatientNumberNotFoundException extends Exception { public PatientNumberNotFoundException(String message) { super(message); } }
+
+// Directory: util/DBPropertyUtil.java package util;
+
+import java.io.FileInputStream; import java.util.Properties;
+
+public class DBPropertyUtil { public static String getPropertyString(String fileName) { String url = ""; try { Properties prop = new Properties(); prop.load(new FileInputStream(fileName)); url = "jdbc:mysql://" + prop.getProperty("hostname") + ":" + prop.getProperty("port") + "/" + prop.getProperty("dbname") + "?user=" + prop.getProperty("username") + "&password=" + prop.getProperty("password"); } catch (Exception e) { e.printStackTrace(); } return url; } }
+
+// Directory: util/DBConnUtil.java package util;
+
+import java.sql.Connection; import java.sql.DriverManager;
+
+public class DBConnUtil { public static Connection getConnection() { Connection conn = null; try { String url = DBPropertyUtil.getPropertyString("db.properties"); conn = DriverManager.getConnection(url); } catch (Exception e) { e.printStackTrace(); } return conn; } }
+
+// Directory: mainmod/MainModule.java package mainmod;
+
+import dao.HospitalServiceImpl; import entity.Appointment; import java.util.List; import java.util.Scanner;
+
+public class MainModule { public static void main(String[] args) { HospitalServiceImpl service = new HospitalServiceImpl(); Scanner sc = new Scanner(System.in);
+
+while (true) {
+        System.out.println("\n--- Hospital Management Menu ---");
+        System.out.println("1. Get Appointment by ID");
+        System.out.println("2. Get Appointments for Patient");
+        System.out.println("3. Get Appointments for Doctor");
+        System.out.println("4. Schedule Appointment");
+        System.out.println("5. Update Appointment");
+        System.out.println("6. Cancel Appointment");
+        System.out.println("7. Exit");
+        int choice = sc.nextInt();
+
+        switch (choice) {
+            case 1:
+                System.out.print("Enter appointment ID: ");
+                Appointment appt = service.getAppointmentById(sc.nextInt());
+                System.out.println(appt);
+                break;
+            case 2:
+                System.out.print("Enter patient ID: ");
+                List<Appointment> plist = service.getAppointmentsForPatient(sc.nextInt());
+                plist.forEach(System.out::println);
+                break;
+            case 3:
+                System.out.print("Enter doctor ID: ");
+                List<Appointment> dlist = service.getAppointmentsForDoctor(sc.nextInt());
+                dlist.forEach(System.out::println);
+                break;
+            case 4:
+                System.out.print("Enter all appointment details: ");
+                Appointment newApt = new Appointment(sc.nextInt(), sc.nextInt(), sc.nextInt(), sc.next(), sc.next());
+                System.out.println(service.scheduleAppointment(newApt) ? "Scheduled" : "Failed");
+                break;
+            case 5:
+                System.out.print("Enter updated appointment details: ");
+                Appointment upApt = new Appointment(sc.nextInt(), sc.nextInt(), sc.nextInt(), sc.next(), sc.next());
+                System.out.println(service.updateAppointment(upApt) ? "Updated" : "Failed");
+                break;
+            case 6:
+                System.out.print("Enter appointment ID: ");
+                System.out.println(service.cancelAppointment(sc.nextInt()) ? "Cancelled" : "Failed");
+                break;
+            case 7:
+                System.exit(0);
+        }
+    }
+}
+
+}
+
