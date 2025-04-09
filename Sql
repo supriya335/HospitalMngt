@@ -1,0 +1,51 @@
+-- Create Database
+CREATE DATABASE IF NOT EXISTS hospital_db;
+USE hospital_db;
+
+-- 1. Patient Table
+CREATE TABLE IF NOT EXISTS Patient (
+    patient_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    date_of_birth DATE NOT NULL,
+    gender VARCHAR(10) NOT NULL,
+    contact_number VARCHAR(15) NOT NULL UNIQUE,
+    address VARCHAR(255)
+);
+
+-- 2. Doctor Table
+CREATE TABLE IF NOT EXISTS Doctor (
+    doctor_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    specialization VARCHAR(100),
+    contact_number VARCHAR(15) NOT NULL UNIQUE
+);
+
+-- 3. Appointment Table
+CREATE TABLE IF NOT EXISTS Appointment (
+    appointment_id INT PRIMARY KEY AUTO_INCREMENT,
+    patient_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    appointment_date DATE NOT NULL,
+    description TEXT,
+    FOREIGN KEY (patient_id) REFERENCES Patient(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES Doctor(doctor_id) ON DELETE CASCADE
+);
+
+-- Sample Patients
+INSERT INTO Patient (first_name, last_name, date_of_birth, gender, contact_number, address) VALUES
+('John', 'Doe', '1990-01-01', 'Male', '9876543210', 'Mumbai'),
+('Jane', 'Smith', '1985-05-12', 'Female', '9123456789', 'Pune'),
+('Arjun', 'Kumar', '1992-07-22', 'Male', '9001112233', 'Delhi');
+
+-- Sample Doctors
+INSERT INTO Doctor (first_name, last_name, specialization, contact_number) VALUES
+('Amit', 'Verma', 'Cardiology', '9988776655'),
+('Nisha', 'Mehta', 'Neurology', '9876123456');
+
+-- Sample Appointments
+INSERT INTO Appointment (patient_id, doctor_id, appointment_date, description) VALUES
+(1, 1, '2025-04-10', 'Regular heart check-up'),
+(2, 2, '2025-04-12', 'Migraine consultation'),
+(3, 1, '2025-04-15', 'Follow-up appointment');
